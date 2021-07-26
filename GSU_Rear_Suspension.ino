@@ -10,17 +10,24 @@ int history[5] = {0, 0, 0, 0, 0};
 int historyTotal = 0;
 int historyAvg = 0;
 int currentPressure = 0;
-int minPressure = 218;
+int minPressure = 219;
 int maxPressure = 250;
+int overPressure = 290;
 
 // Setup Compressor Variable
 int compressorRelayPin = 3;
 int compressorState = 0;
 bool compressorWorking = true;
 
+// Setup Air Relief Solenoid
+int reliefRelayPin = 4;
+int reliefState = 0;
+bool reliefWorking = true;
+
 void setup() {
   Serial.begin(9600);
   pinMode(compressorRelayPin, OUTPUT);
+  pinMode(reliefRelayPin, OUTPUT);
 }
 
 void loop() {
@@ -63,8 +70,23 @@ void loop() {
       switchCompressor();
       return;
     }
+
+    // Overinflated dumping air
+    if (compressorState == 0 && currentPressure >= overPressure && history[1] >= overPressure) {
+      Serial.println("Short Relief Air Burst");
+      //pulseReliefValve();
+      return;
+    }
+    
     Serial.println("No Action Needed");
   }
+}
+
+void pulseReliefValve() {
+  int theTime = millis();
+  digitalWrite(reliefRelayPin, HIGH);
+  sleep(30);
+  digitalWrite(reliefRelayPing, LOW);
 }
 
 void updateHistory(int newReading) {
